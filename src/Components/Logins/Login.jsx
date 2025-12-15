@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import API from "../../API/axios";
+import API from "../../utils/apiUtils";
 import "../CSS/Login.css";
 
 const Login = () => {
@@ -29,7 +29,10 @@ const Login = () => {
 
     try {
       const response = await API.post("/auth/login", credentials);
-      const { token, roles } = response.data;
+
+      // Handle response - check if data is nested or direct
+      const responseData = response.data || response;
+      const { token, roles } = responseData;
 
       localStorage.clear();
       localStorage.setItem("token", token);
@@ -40,6 +43,8 @@ const Login = () => {
       else if (roles.includes("EMPLOYEE")) navigate("/Dashboard");
       else navigate("/");
     } catch (err) {
+      console.error("Login error:", err);
+
       // Handle different error cases
       if (err.response) {
         const status = err.response.status;
@@ -62,7 +67,7 @@ const Login = () => {
       } else if (err.request) {
         setError("❌ Network error. Please check your connection.");
       } else {
-        setError("❌ Something went wrong. Please try again.");
+        setError(err.message || "❌ Something went wrong. Please try again.");
       }
     } finally {
       setLoading(false);
